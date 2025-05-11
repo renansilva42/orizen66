@@ -38,6 +38,7 @@ def upload_file_to_supabase_storage(file, folder):
         unique_filename = f"{uuid.uuid4().hex}_{filename}"
         file_data = file.read()
         try:
+            # Removed bucket existence check to avoid false negatives
             supabase.storage.from_(folder).upload(unique_filename, file_data)
             public_url = supabase.storage.from_(folder).get_public_url(unique_filename)
             return public_url
@@ -103,6 +104,8 @@ def profile():
             profile = response.data[0]
     return render_template("profile.html", user=user, profile=profile)
 
+from datetime import timedelta
+
 @app.route("/daily", methods=["GET", "POST"])
 def daily():
     if not is_logged_in():
@@ -113,28 +116,72 @@ def daily():
     response_profile = supabase.table("profiles").select("*").eq("user_id", user["id"]).execute()
     if response_profile.data and len(response_profile.data) > 0:
         profile = response_profile.data[0]
-    completion = None
+
+    # Determine the date to view/edit, default to today
+    date_str = request.args.get("date")
+    if date_str:
+        try:
+            selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            selected_date = datetime.now().date()
+    else:
+        selected_date = datetime.now().date()
+
     if request.method == "POST":
         comment = request.form.get("comment")
         photo = request.files.get("photo")
         photo_url = None
-        if photo:
+        if photo and allowed_file(photo.filename):
             photo_url = upload_file_to_supabase_storage(photo, "daily-photos")
+        else:
+            # If no new photo uploaded, keep existing photo_url if any
+            existing = supabase.table("daily_completions")\
+                .select("photo_url")\
+                .eq("user_id", user["id"])\
+                .eq("date", selected_date.isoformat())\
+                .single().execute()
+            if existing.data:
+                photo_url = existing.data.get("photo_url")
+
         data = {
             "user_id": user["id"],
             "completed": True,
             "comment": comment,
             "photo_url": photo_url,
-            "date": datetime.now().date().isoformat()
+            "date": selected_date.isoformat()
         }
         # Upsert daily completion with unique constraint on user_id and date
         supabase.table("daily_completions").upsert(data, on_conflict=["user_id", "date"]).execute()
-    # Fetch daily completion data from Supabase for today
-    today = datetime.now().date().isoformat()
-    response = supabase.table("daily_completions").select("*").eq("user_id", user["id"]).eq("date", today).execute()
-    if response.data and len(response.data) > 0:
-        completion = response.data[0]
-    return render_template("daily.html", completion=completion, profile=profile)
+
+    # Fetch all daily completions for the user, limit to last 66 days
+    start_date = datetime.now().date() - timedelta(days=65)
+    response_all = supabase.table("daily_completions")\
+        .select("*")\
+        .eq("user_id", user["id"])\
+        .gte("date", start_date.isoformat())\
+        .order("date", desc=False)\
+        .execute()
+    completions = response_all.data if response_all.data else []
+
+    # Find completion for selected_date
+    completion = next((c for c in completions if c["date"] == selected_date.isoformat()), None)
+
+    # Calculate progress and streak info
+    total_days = 66
+    completed_days = len([c for c in completions if c["completed"]])
+    progress_percent = int((completed_days / total_days) * 100)
+
+    return render_template(
+        "daily.html",
+        completion=completion,
+        completions=completions,
+        profile=profile,
+        selected_date=selected_date,
+        total_days=total_days,
+        completed_days=completed_days,
+        progress_percent=progress_percent,
+        timedelta=timedelta
+    )
 
 @app.route("/ranking")
 def ranking():
