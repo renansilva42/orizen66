@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perfil - Orizen66</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='header.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Referências aos elementos do DOM
+        const fileInput = document.getElementById('photo');
+        const fileLabel = document.querySelector('.file-label');
+        const fileName = document.getElementById('file-name');
+        const previewContainer = document.getElementById('image-preview-container');
+        const profilePhotoPreview = document.getElementById('profile-photo-preview');
+        const profilePlaceholder = document.getElementById('profile-photo-preview-placeholder');
+        const activityInput = document.getElementById('activity');
+        const activityError = document.getElementById('activity-error');
+        const form = document.querySelector('.profile-form');
+    
+        // Manipulador de eventos para a seleção de arquivo
+        fileInput.addEventListener('change', function(e) {
+            // Atualiza o nome do arquivo
+            if (fileInput.files.length > 0) {
+                fileName.textContent = fileInput.files[0].name;
+                
+                // Cria uma prévia da imagem
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Limpa o container de prévia
+                    previewContainer.innerHTML = '';
+                    
+                    // Cria um elemento de imagem para a prévia
+                    const imgPreview = document.createElement('img');
+                    imgPreview.src = event.target.result;
+                    imgPreview.className = 'preview-image';
+                    imgPreview.alt = 'Prévia da imagem selecionada';
+                    
+                    previewContainer.appendChild(imgPreview);
+                    
+                    // Atualiza também a imagem principal de perfil se existir
+                    if (profilePhotoPreview) {
+                        profilePhotoPreview.src = event.target.result;
+                    } else if (profilePlaceholder) {
+                        // Se não tiver uma imagem de perfil, esconde o placeholder e cria uma nova imagem
+                        profilePlaceholder.style.display = 'none';
+                        const newProfileImg = document.createElement('img');
+                        newProfileImg.src = event.target.result;
+                        newProfileImg.alt = 'Foto de Perfil';
+                        newProfileImg.className = 'profile-photo';
+                        newProfileImg.id = 'profile-photo-preview';
+                        
+                        const profileImage = document.querySelector('.profile-image');
+                        profileImage.appendChild(newProfileImg);
+                    }
+                };
+                
+                // Lê o arquivo como uma URL de dados
+                reader.readAsDataURL(fileInput.files[0]);
+                
+                // Marca o botão como pressionado visualmente
+                fileLabel.setAttribute('aria-pressed', 'true');
+            } else {
+                fileName.textContent = 'Nenhum arquivo selecionado';
+                fileLabel.setAttribute('aria-pressed', 'false');
+            }
+        });
+    
+        // Validação do formulário antes de enviar
+        form.addEventListener('submit', function(e) {
+            // Verifica se o campo de atividade foi preenchido
+            if (!activityInput.value.trim()) {
+                e.preventDefault(); // Impede o envio do formulário
+                activityError.textContent = 'Por favor, informe qual hábito deseja cultivar.';
+                activityInput.focus();
+                return false;
+            }
+            
+            // Se estiver tudo ok, o formulário é enviado
+            return true;
+        });
+    
+        // Limpa mensagens de erro quando o usuário começa a digitar
+        activityInput.addEventListener('input', function() {
+            if (activityInput.value.trim()) {
+                activityError.textContent = '';
+            }
+        });
+    
+        // Aumenta a acessibilidade permitindo ativar o input de arquivo com o teclado
+        fileLabel.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
+    });
+    </script>
+<body>
+    <div class="container">
+        {% include 'header.html' %}
+
+        <main class="profile-content" role="main" aria-labelledby="profile-title">
+            <div class="page-title">
+                <h2 id="profile-title"><i class="fas fa-user-circle" aria-hidden="true"></i> Seu Perfil</h2>
+                <p class="subtitle">Configure sua jornada de 66 dias</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div class="messages" role="alert" aria-live="assertive">
+                  {% for category, message in messages %}
+                    <div class="message {{ category }}">
+                      <i class="fas fa-info-circle" aria-hidden="true"></i> {{ message }}
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            <div class="profile-card">
+                <div class="profile-image" aria-label="Foto de perfil atual">
+                    {% if profile.photo_url %}
+                        <img src="{{ profile.photo_url }}" alt="Foto de Perfil" class="profile-photo" id="profile-photo-preview" />
+                    {% else %}
+                        <div class="profile-placeholder" id="profile-photo-preview-placeholder">
+                            <i class="fas fa-user" aria-hidden="true"></i>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <form method="post" enctype="multipart/form-data" action="{{ url_for('profile') }}" class="profile-form" novalidate>
+                    <div class="form-group">
+                        <label for="activity">Qual hábito saudável você deseja cultivar?</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-heart" aria-hidden="true"></i>
+                            <input type="text" id="activity" name="activity" value="{{ profile.activity or '' }}" placeholder="Ex: Meditação, Caminhada, Yoga..." required aria-required="true" aria-describedby="activity-help" />
+                        </div>
+                        <p class="help-text" id="activity-help">Este será seu compromisso pelos próximos 66 dias</p>
+                        <span class="validation-message" id="activity-error" aria-live="polite"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="photo">Foto de Perfil</label>
+                        <div class="file-upload" aria-describedby="photo-help">
+                            <input type="file" id="photo" name="photo" accept="image/*" class="file-input" aria-label="Escolher arquivo de foto de perfil" />
+                            <label for="photo" class="file-label" tabindex="0" role="button" aria-pressed="false">
+                                <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                                <span>Escolher arquivo</span>
+                            </label>
+                            <span id="file-name" class="file-name" aria-live="polite">Nenhum arquivo selecionado</span>
+                        </div>
+                        <p class="help-text" id="photo-help">Selecione uma imagem para atualizar sua foto de perfil.</p>
+                        <div id="image-preview-container" aria-live="polite" aria-atomic="true"></div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save" aria-label="Salvar perfil">
+                            <i class="fas fa-save" aria-hidden="true"></i> Salvar Perfil
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="motivation-card" role="region" aria-label="Informação motivacional">
+                <div class="motivation-icon">
+                    <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                </div>
+                <div class="motivation-text">
+                    <h3>Sabia que?</h3>
+                    <p>Estudos mostram que são necessários cerca de 66 dias para formar um novo hábito. Mantenha a consistência e transforme sua vida!</p>
+                </div>
+            </div>
+        </main>
+
+        {% include 'footer.html' %}
+    </div>
+</body>
+</html>

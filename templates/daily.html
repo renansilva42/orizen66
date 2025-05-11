@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daily Task - Orizen66</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='daily.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='header.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+    <div class="container">
+        {% include 'header.html' %}
+
+        <main class="daily-content">
+            <h1>Daily Task Completion</h1>
+            <p><a href="{{ url_for('profile') }}">Profile</a> | <a href="{{ url_for('logout') }}">Logout</a> | <a href="{{ url_for('ranking') }}">Ranking</a></p>
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <ul class="flashes">
+                  {% for message in messages %}
+                    <li>{{ message }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+            {% if completion and completion.completed %}
+                <div class="completion-card">
+                    <div class="completion-header">
+                        <div class="completion-icon"><i class="fas fa-check-circle"></i></div>
+                        <h3>Você marcou a tarefa de hoje como concluída!</h3>
+                    </div>
+                    {% if completion.comment %}
+                        <div class="completion-comment">
+                            <h4><i class="fas fa-comment"></i> Comentário</h4>
+                            <p>{{ completion.comment }}</p>
+                        </div>
+                    {% endif %}
+                    {% if completion.photo_url %}
+                        <div class="completion-photo">
+                            <h4><i class="fas fa-camera"></i> Foto</h4>
+                            <img src="{{ completion.photo_url }}" alt="Daily Photo" class="daily-photo" />
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <form method="post" enctype="multipart/form-data" action="{{ url_for('daily') }}" class="daily-form">
+                    <label for="comment">Add a comment (optional):</label><br />
+                    <textarea id="comment" name="comment" rows="4" cols="50"></textarea><br />
+                    <label for="photo">Upload a photo (optional):</label><br />
+                    <input type="file" id="photo" name="photo" accept="image/*" /><br />
+                    <button type="submit" class="btn-complete">Mark as Completed</button>
+                </form>
+            {% endif %}
+        </main>
+
+        {% include 'footer.html' %}
+    </div>
+</body>
+</html>

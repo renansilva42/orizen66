@@ -1,0 +1,298 @@
+/* Estilos específicos para a página de check-in diário */
+
+/* Container principal do conteúdo */
+.daily-content {
+  flex: 1;
+  margin-bottom: 40px;
+}
+
+/* Card diário */
+.daily-card {
+  background-color: var(--surface);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px var(--shadow);
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+/* Seção do hábito do usuário */
+.activity-reminder {
+  text-align: center;
+  padding: 20px;
+  margin-bottom: 30px;
+  background-color: rgba(60, 179, 113, 0.08);
+  border-radius: 10px;
+}
+
+.activity-reminder i {
+  font-size: 32px;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+
+.activity-reminder h3 {
+  font-size: 18px;
+  color: var(--text);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.activity-name {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  padding: 8px 16px;
+  background-color: var(--primary-light);
+  border-radius: 30px;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+/* Formulário de check-in */
+.daily-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.daily-form textarea {
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  width: 100%;
+  font-family: 'Poppins', sans-serif;
+  resize: vertical;
+  min-height: 100px;
+  transition: all 0.3s ease;
+}
+
+.daily-form textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(60, 179, 113, 0.2);
+}
+
+.daily-form label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.daily-form label i {
+  color: var(--primary);
+}
+
+.btn-complete {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  padding: 14px 28px;
+  font-size: 18px;
+  border-radius: 30px;
+  box-shadow: 0 4px 15px rgba(60, 179, 113, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-complete:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(60, 179, 113, 0.4);
+}
+
+/* Card de conclusão da tarefa */
+.completion-card {
+  text-align: center;
+  padding: 30px 20px;
+  background-color: rgba(60, 179, 113, 0.08);
+  border-radius: 12px;
+  position: relative;
+}
+
+.completion-header {
+  margin-bottom: 25px;
+}
+
+.completion-icon {
+  font-size: 48px;
+  color: var(--success);
+  margin-bottom: 15px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.completion-header h3 {
+  font-size: 22px;
+  color: var(--success);
+  font-weight: 600;
+}
+
+.completion-comment, .completion-photo {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.completion-comment h4, .completion-photo h4 {
+  font-size: 16px;
+  color: var(--primary-dark);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.completion-comment p {
+  color: var(--text);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.daily-photo {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.streak-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.streak-info i {
+  color: #ff7700;
+  font-size: 24px;
+}
+
+.streak-info strong {
+  color: var(--primary-dark);
+}
+
+/* Barra de progresso */
+.progress-container {
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+.progress-circle-container {
+  display: flex;
+  justify-content: center;
+  flex: 0 0 140px;
+}
+
+.progress-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: conic-gradient(var(--primary) calc(var(--progress) * 3.6deg), #f0f0f0 0deg);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  --progress: calc({{ day_count }} / 0.66); /* Este valor será substituído pelo Jinja */
+}
+
+.progress-circle-inner {
+  width: 120px;
+  height: 120px;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.progress-day {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.progress-number {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  line-height: 1;
+}
+
+.progress-total {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.progress-bar-container {
+  flex: 1;
+  min-width: 200px;
+}
+
+.progress-bar {
+  height: 20px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--primary-light), var(--primary));
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 5px;
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .progress-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .progress-bar-container {
+    width: 100%;
+  }
+  
+  .completion-card {
+    padding: 20px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .activity-name {
+    font-size: 20px;
+    padding: 6px 12px;
+  }
+  
+  .btn-complete {
+    width: 100%;
+  }
+}

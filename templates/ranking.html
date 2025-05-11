@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Ranking - Orizen66</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='header.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}" />
+</head>
+<body>
+    <div class="container">
+        {% include 'header.html' %}
+
+        <h1>Top 10 Engaged Users</h1>
+        <p><a href="{{ url_for('profile') }}">Profile</a> | <a href="{{ url_for('daily') }}">Daily Task</a> | <a href="{{ url_for('logout') }}">Logout</a></p>
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Profile Photo</th>
+                    <th>Activity</th>
+                    <th>Completed Days</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in ranking %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        {% if user.photo_url %}
+                            <img src="{{ user.photo_url }}" alt="Profile Photo" width="50" />
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ user.activity or 'N/A' }}</td>
+                    <td>{{ user.completions or 0 }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4">No data available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% include 'footer.html' %}
+    </div>
+</body>
+</html>
