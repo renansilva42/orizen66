@@ -33,6 +33,24 @@
             color: #2a8c57;
             border-color: #3cb371;
         }
+
+        /* Hover effect for file upload label */
+        .file-upload-label:hover {
+            background-color: #d4f0d6;
+            border-color: #2a8c57;
+            color: #2a8c57;
+            cursor: pointer;
+        }
+
+        /* Thumbnail preview for uploaded image */
+        .file-preview-img {
+            max-width: 80px;
+            max-height: 80px;
+            margin-top: 10px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -99,11 +117,12 @@
                         <label for="photo"><i class="fas fa-camera"></i> Envie uma foto (opcional):</label>
                         <div class="file-upload">
                             <input type="file" id="photo" name="photo" accept="image/*" class="file-input" />
-                            <div class="file-upload-label">
+                            <label for="photo" class="file-upload-label" tabindex="0" role="button" aria-label="Escolha um arquivo ou arraste-o aqui">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <span>Escolha um arquivo ou arraste-o aqui</span>
-                            </div>
+                            </label>
                             <div class="file-name"></div>
+                            <div class="file-preview"></div>
                         </div>
                         
                         {% if completion and completion.photo_url %}
@@ -203,15 +222,59 @@
             const fileInput = document.querySelector('.file-input');
             const fileName = document.querySelector('.file-name');
             const fileLabel = document.querySelector('.file-upload-label');
+            const fileUpload = document.querySelector('.file-upload');
             
             if (fileInput) {
                 fileInput.addEventListener('change', function() {
                     if (this.files && this.files[0]) {
                         fileName.textContent = this.files[0].name;
                         fileLabel.classList.add('has-file');
+                        // Show image preview
+                        const previewContainer = document.querySelector('.file-preview');
+                        if (previewContainer) {
+                            previewContainer.innerHTML = '';
+                            const img = document.createElement('img');
+                            img.src = URL.createObjectURL(this.files[0]);
+                            img.alt = 'Pré-visualização da imagem';
+                            img.classList.add('file-preview-img');
+                            previewContainer.appendChild(img);
+                        }
                     } else {
                         fileName.textContent = '';
                         fileLabel.classList.remove('has-file');
+                        const previewContainer = document.querySelector('.file-preview');
+                        if (previewContainer) {
+                            previewContainer.innerHTML = '';
+                        }
+                    }
+                });
+            }
+            
+            if (fileUpload) {
+                fileUpload.addEventListener('dragenter', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fileUpload.classList.add('dragover');
+                });
+                fileUpload.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fileUpload.classList.add('dragover');
+                });
+                fileUpload.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fileUpload.classList.remove('dragover');
+                });
+                fileUpload.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fileUpload.classList.remove('dragover');
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        fileInput.files = e.dataTransfer.files;
+                        fileName.textContent = e.dataTransfer.files[0].name;
+                        fileLabel.classList.add('has-file');
+                        e.dataTransfer.clearData();
                     }
                 });
             }
