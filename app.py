@@ -142,9 +142,10 @@ def daily():
                 .select("photo_url")\
                 .eq("user_id", user["id"])\
                 .eq("date", selected_date.isoformat())\
-                .single().execute()
-            if existing.data:
+                .maybe_single().execute()
+            if existing and existing.data:
                 photo_url = existing.data.get("photo_url")
+
 
         data = {
             "user_id": user["id"],
@@ -154,7 +155,7 @@ def daily():
             "date": selected_date.isoformat()
         }
         # Upsert daily completion with unique constraint on user_id and date
-        supabase.table("daily_completions").upsert(data, on_conflict=["user_id", "date"]).execute()
+        supabase.table("daily_completions").upsert(data, on_conflict="user_id,date").execute()
 
     # Fetch all daily completions for the user, limit to last 66 days
     # Adjust start_date to be 65 days before tomorrow (12/05/2025)
