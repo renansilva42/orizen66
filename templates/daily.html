@@ -79,6 +79,7 @@
                 </div>
             </section>
 
+            {% if selected_date %}
             <section class="daily-form-section">
                 <h2>
                     {% if completion and completion.completed %}
@@ -122,6 +123,7 @@
                     </button>
                 </form>
             </section>
+            {% endif %}
 
             <section class="daily-timeline-section">
                 <h2><i class="fas fa-history"></i> Linha do Tempo de Conclusões Diárias</h2>
@@ -140,8 +142,8 @@
                 
                 <div class="timeline-grid">
                     {% for day in range(total_days) %}
-                        {% set day_date = (selected_date - timedelta(days=total_days - day - 1)) %}
-                        {% set day_iso = day_date.isoformat() %}
+                        {% set day_date = (start_date + timedelta(days=day)) %}
+                        {% set day_iso = day_date.strftime('%Y-%m-%d') %}
                         {% set day_completion = None %}
                         {% for c in completions %}
                             {% if c.date == day_iso %}
@@ -149,7 +151,7 @@
                             {% endif %}
                         {% endfor %}
                         
-                        <div class="daily-card {% if day_completion and day_completion.completed %}completed{% else %}missing{% endif %} {% if day_date == selected_date %}selected{% endif %}">
+                        <div class="daily-card {% if day_completion and day_completion.completed %}completed{% else %}missing{% endif %} {% if selected_date and day_date == selected_date %}selected{% endif %}">
                             <div class="card-status-indicator"></div>
                             <div class="day-header">
                                 <div class="day-number">Dia {{ day + 1 }}</div>
@@ -196,24 +198,8 @@
     </div>
     
     <script>
-        // Função para ajustar as datas para começar em 12/05/2025
+        // Preview do upload de arquivo
         document.addEventListener('DOMContentLoaded', function() {
-            // Ajustar as datas para começar de 12/05/2025
-            const dayDateElements = document.querySelectorAll('.day-date');
-            const startDate = new Date(2025, 4, 12); // 12 de maio de 2025 (mês é 0-indexed)
-            
-            dayDateElements.forEach((element, index) => {
-                const currentDate = new Date(startDate);
-                currentDate.setDate(startDate.getDate() + index);
-                
-                const day = String(currentDate.getDate()).padStart(2, '0');
-                const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-                const year = currentDate.getFullYear();
-                
-                element.textContent = `${day}/${month}/${year}`;
-            });
-            
-            // Preview do upload de arquivo
             const fileInput = document.querySelector('.file-input');
             const fileName = document.querySelector('.file-name');
             const fileLabel = document.querySelector('.file-upload-label');

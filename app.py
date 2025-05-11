@@ -117,17 +117,20 @@ def daily():
     if response_profile.data and len(response_profile.data) > 0:
         profile = response_profile.data[0]
 
-    # Determine the date to view/edit, default to today
+    # Determine the date to view/edit, set to None if no valid date provided
     date_str = request.args.get("date")
     if date_str:
         try:
             selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except ValueError:
-            selected_date = datetime.now().date()
+            selected_date = None
     else:
-        selected_date = datetime.now().date()
+        selected_date = None
 
     if request.method == "POST":
+        if selected_date is None:
+            flash("Data inválida para conclusão diária.")
+            return redirect(url_for("daily"))
         comment = request.form.get("comment")
         photo = request.files.get("photo")
         photo_url = None
@@ -154,7 +157,9 @@ def daily():
         supabase.table("daily_completions").upsert(data, on_conflict=["user_id", "date"]).execute()
 
     # Fetch all daily completions for the user, limit to last 66 days
-    start_date = datetime.now().date() - timedelta(days=65)
+    # Adjust start_date to be 65 days before tomorrow (12/05/2025)
+    base_date = datetime.now().date() + timedelta(days=1)
+    start_date = base_date - timedelta(days=65)
     response_all = supabase.table("daily_completions")\
         .select("*")\
         .eq("user_id", user["id"])\
@@ -164,13 +169,19 @@ def daily():
     completions = response_all.data if response_all.data else []
 
     # Find completion for selected_date
-    completion = next((c for c in completions if c["date"] == selected_date.isoformat()), None)
+    completion = None
+    if selected_date is not None:
+        completion = next((c for c in completions if c["date"] == selected_date.isoformat()), None)
 
     # Calculate progress and streak info
     total_days = 66
     completed_days = len([c for c in completions if c["completed"]])
     progress_percent = int((completed_days / total_days) * 100)
 
+    current_date = datetime.now().date()
+    from datetime import date
+    start_date_str = "2025-05-12"
+    start_date = date.fromisoformat(start_date_str)
     return render_template(
         "daily.html",
         completion=completion,
@@ -180,7 +191,9 @@ def daily():
         total_days=total_days,
         completed_days=completed_days,
         progress_percent=progress_percent,
-        timedelta=timedelta
+        timedelta=timedelta,
+        current_date=current_date,
+        start_date=start_date
     )
 
 @app.route("/ranking")
