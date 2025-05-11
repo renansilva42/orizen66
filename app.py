@@ -39,7 +39,7 @@ def upload_file_to_supabase_storage(file, folder):
         file_data = file.read()
         try:
             supabase.storage.from_(folder).upload(unique_filename, file_data)
-            public_url = supabase.storage.from_(folder).get_public_url(unique_filename).public_url
+            public_url = supabase.storage.from_(folder).get_public_url(unique_filename)
             return public_url
         except Exception as e:
             print(f"Error uploading file to Supabase Storage: {e}")
@@ -108,6 +108,11 @@ def daily():
     if not is_logged_in():
         return redirect(url_for("login"))
     user = session["user"]
+    profile = None
+    # Fetch profile data from Supabase
+    response_profile = supabase.table("profiles").select("*").eq("user_id", user["id"]).execute()
+    if response_profile.data and len(response_profile.data) > 0:
+        profile = response_profile.data[0]
     completion = None
     if request.method == "POST":
         comment = request.form.get("comment")
@@ -129,12 +134,18 @@ def daily():
     response = supabase.table("daily_completions").select("*").eq("user_id", user["id"]).eq("date", today).execute()
     if response.data and len(response.data) > 0:
         completion = response.data[0]
-    return render_template("daily.html", completion=completion)
+    return render_template("daily.html", completion=completion, profile=profile)
 
 @app.route("/ranking")
 def ranking():
     if not is_logged_in():
         return redirect(url_for("login"))
+    user = session["user"]
+    profile = None
+    # Fetch profile data from Supabase
+    response_profile = supabase.table("profiles").select("*").eq("user_id", user["id"]).execute()
+    if response_profile.data and len(response_profile.data) > 0:
+        profile = response_profile.data[0]
     # Fetch top 10 users by count of completed days
     query = """
     SELECT p.user_id, p.activity, p.photo_url, COUNT(dc.completed) as completions
@@ -150,7 +161,7 @@ def ranking():
     except Exception as e:
         print(f"Error fetching ranking data: {e}")
         ranking = []
-    return render_template("ranking.html", ranking=ranking)
+    return render_template("ranking.html", ranking=ranking, profile=profile)
 
 
 if __name__ == "__main__":
