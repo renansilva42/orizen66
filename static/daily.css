@@ -689,6 +689,17 @@
   }
 }
 
+@media (min-width: 769px) {
+  .container {
+    max-width: 1600px;
+  }
+  .daily-content {
+    max-width: 1600px;
+  }
+  .timeline-grid {
+    grid-template-columns: repeat(3, minmax(300px, 1fr));
+  }
+}
 @media (max-width: 480px) {
   .daily-content {
     padding: 10px;

@@ -66,51 +66,53 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Função para mostrar mensagem flash
-    function showFlashMessage(message, isError = false) {
-        const flashContainer = document.querySelector('.flash-container');
-        if (!flashContainer) {
-            const newFlashContainer = document.createElement('div');
-            newFlashContainer.classList.add('flash-container');
-            document.querySelector('.progress-section').insertAdjacentElement('beforebegin', newFlashContainer);
-            
-            const flashMessage = document.createElement('div');
-            flashMessage.classList.add('flash-message');
-            
-            if (isError) {
-                flashMessage.style.borderLeftColor = 'var(--danger)';
-                flashMessage.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
-                flashMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message} <button class="close-flash">×</button>`;
-            } else {
-                flashMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${message} <button class="close-flash">×</button>`;
+            // Função para mostrar mensagem flash
+            function showFlashMessage(message, isError = false) {
+                const flashContainer = document.querySelector('.flash-container');
+                if (!flashContainer) {
+                    const newFlashContainer = document.createElement('div');
+                    newFlashContainer.classList.add('flash-container');
+                    document.querySelector('.progress-section').insertAdjacentElement('beforebegin', newFlashContainer);
+                    
+                    const flashMessage = document.createElement('div');
+                    flashMessage.classList.add('flash-message');
+                    
+                    if (isError) {
+                        flashMessage.style.borderLeftColor = 'var(--danger)';
+                        flashMessage.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+                        flashMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message} <button class="close-flash">×</button>`;
+                    } else {
+                        flashMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${message} <button class="close-flash">×</button>`;
+                    }
+                    
+                    newFlashContainer.appendChild(flashMessage);
+                    
+                    // Add close event
+                    flashMessage.querySelector('.close-flash').addEventListener('click', function() {
+                        flashMessage.remove();
+                    });
+                } else {
+                    // Clear existing flash messages before adding new one
+                    flashContainer.innerHTML = '';
+                    const flashMessage = document.createElement('div');
+                    flashMessage.classList.add('flash-message');
+                    
+                    if (isError) {
+                        flashMessage.style.borderLeftColor = 'var(--danger)';
+                        flashMessage.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+                        flashMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message} <button class="close-flash">×</button>`;
+                    } else {
+                        flashMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${message} <button class="close-flash">×</button>`;
+                    }
+                    
+                    flashContainer.appendChild(flashMessage);
+                    
+                    // Add close event
+                    flashMessage.querySelector('.close-flash').addEventListener('click', function() {
+                        flashMessage.remove();
+                    });
+                }
             }
-            
-            newFlashContainer.appendChild(flashMessage);
-            
-            // Add close event
-            flashMessage.querySelector('.close-flash').addEventListener('click', function() {
-                flashMessage.remove();
-            });
-        } else {
-            const flashMessage = document.createElement('div');
-            flashMessage.classList.add('flash-message');
-            
-            if (isError) {
-                flashMessage.style.borderLeftColor = 'var(--danger)';
-                flashMessage.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
-                flashMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message} <button class="close-flash">×</button>`;
-            } else {
-                flashMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${message} <button class="close-flash">×</button>`;
-            }
-            
-            flashContainer.appendChild(flashMessage);
-            
-            // Add close event
-            flashMessage.querySelector('.close-flash').addEventListener('click', function() {
-                flashMessage.remove();
-            });
-        }
-    }
     
     // Função para contar o número total de dias concluídos
     function countCompletedDays() {
@@ -352,32 +354,39 @@ document.addEventListener('DOMContentLoaded', function() {
     // Restore view and filter buttons functionality
     const viewOptions = document.querySelectorAll('.view-option');
     const filterOptions = document.querySelectorAll('.filter-option');
-    const timelineGrid = document.querySelector('.timeline-grid');
+const timelineGrid = document.getElementById('timeline-container');
 
-    viewOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            viewOptions.forEach(opt => opt.classList.remove('active'));
-            this.classList.add('active');
+viewOptions.forEach(option => {
+    option.addEventListener('click', function() {
+        viewOptions.forEach(opt => opt.classList.remove('active'));
+        this.classList.add('active');
 
-            const view = this.dataset.view;
-            if (timelineGrid) {
-                timelineGrid.className = 'timeline-' + view;
-            }
-        });
+        const view = this.dataset.view;
+        if (timelineGrid) {
+            // Remove existing timeline- classes safely
+            Array.from(timelineGrid.classList).forEach(cls => {
+                if (cls.startsWith('timeline-')) {
+                    timelineGrid.classList.remove(cls);
+                }
+            });
+            timelineGrid.classList.add('timeline-' + view);
+        }
     });
+});
 
-    filterOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            filterOptions.forEach(opt => opt.classList.remove('active'));
-            this.classList.add('active');
+filterOptions.forEach(option => {
+    option.addEventListener('click', function() {
+        filterOptions.forEach(opt => opt.classList.remove('active'));
+        this.classList.add('active');
 
-            const filter = this.dataset.filter;
-            if (timelineGrid) {
-                timelineGrid.classList.remove('filter-all', 'filter-completed', 'filter-missing');
-                timelineGrid.classList.add('filter-' + filter);
-            }
-        });
+        const filter = this.dataset.filter;
+        if (timelineGrid) {
+            timelineGrid.classList.remove('filter-all', 'filter-completed', 'filter-missing');
+            timelineGrid.classList.add('filter-' + filter);
+        }
     });
+});
+
     
     // Função para aplicar os dados das conclusões aos cards
     function applyCompletionsToCards() {
