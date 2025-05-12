@@ -246,22 +246,35 @@ def ranking():
     response_profile = supabase.table("profiles").select("*").eq("user_id", user["id"]).execute()
     if response_profile.data and len(response_profile.data) > 0:
         profile = response_profile.data[0]
-    # Fetch top 10 users by count of completed days
-    query = """
-    SELECT p.user_id, p.activity, p.photo_url, COUNT(dc.completed) as completions
-    FROM profiles p
-    LEFT JOIN daily_completions dc ON p.user_id = dc.user_id AND dc.completed = TRUE
-    GROUP BY p.user_id, p.activity, p.photo_url
-    ORDER BY completions DESC
-    LIMIT 10;
-    """
-    try:
-        response = supabase.rpc("execute_sql", {"query": query}).execute()
-        ranking = response.data if response.data else []
-    except Exception as e:
-        print(f"Error fetching ranking data: {e}")
-        ranking = []
-    return render_template("ranking.html", ranking=ranking, profile=profile)
+
+    # Fetch all profiles
+    response_profiles = supabase.table("profiles").select("*").execute()
+    profiles = response_profiles.data if response_profiles.data else []
+
+    ranking = []
+    for profile_item in profiles:
+        user_id = profile_item.get("user_id")
+        # Count completed daily_completions for this user
+        response_count = supabase.table("daily_completions")\
+            .select("id", count="exact")\
+            .eq("user_id", user_id)\
+            .eq("completed", True)\
+            .execute()
+        completions_count = response_count.count if response_count.count is not None else 0
+        ranking.append({
+            "user_id": user_id,
+            "activity": profile_item.get("activity"),
+            "photo_url": profile_item.get("photo_url"),
+            "completions": completions_count
+        })
+
+    # Sort ranking by completions descending
+    ranking_sorted = sorted(ranking, key=lambda x: x["completions"], reverse=True)
+
+    # Limit to top 10
+    ranking_top_10 = ranking_sorted[:10]
+
+    return render_template("ranking.html", ranking=ranking_top_10, profile=profile)
 
 
 @app.route("/daily/remove", methods=["POST"])
