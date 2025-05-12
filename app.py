@@ -129,6 +129,10 @@ def daily():
     else:
         selected_date = None
 
+    # Adjust start_date to be 65 days before tomorrow (12/05/2025)
+    base_date = datetime.now().date() + timedelta(days=1)
+    start_date = base_date - timedelta(days=65)
+
     if request.method == "POST":
         if selected_date is None:
             flash("Data inválida para conclusão diária.")
@@ -159,13 +163,32 @@ def daily():
         # Upsert daily completion with unique constraint on user_id and date
         supabase.table("daily_completions").upsert(data, on_conflict="user_id,date").execute()
 
-        # If AJAX request, return JSON with updated completion data
+        # If AJAX request, return JSON with updated completion data and progress info
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            # Recalculate progress stats after upsert
+            response_all = supabase.table("daily_completions")\
+                .select("*")\
+                .eq("user_id", user["id"])\
+                .gte("date", start_date.isoformat())\
+                .order("date", desc=False)\
+                .execute()
+            completions = []
+            if response_all.data:
+                for c in response_all.data:
+                    c['date'] = c['date'].strftime('%Y-%m-%d') if hasattr(c['date'], 'strftime') else c['date']
+                    completions.append(c)
+            total_days = 66
+            completed_days = len([c for c in completions if c["completed"]])
+            progress_percent = int((completed_days / total_days) * 100)
+
             return jsonify({
                 "date": selected_date.isoformat(),
                 "completed": True,
                 "comment": comment,
-                "photo_url": photo_url
+                "photo_url": photo_url,
+                "completed_days": completed_days,
+                "total_days": total_days,
+                "progress_percent": progress_percent
             })
 
     # Fetch all daily completions for the user, limit to last 66 days
@@ -178,7 +201,12 @@ def daily():
         .gte("date", start_date.isoformat())\
         .order("date", desc=False)\
         .execute()
-    completions = response_all.data if response_all.data else []
+    # Convert date fields to string for template comparison
+    completions = []
+    if response_all.data:
+        for c in response_all.data:
+            c['date'] = c['date'].strftime('%Y-%m-%d') if hasattr(c['date'], 'strftime') else c['date']
+            completions.append(c)
 
     # Find completion for selected_date
     completion = None
@@ -191,9 +219,8 @@ def daily():
     progress_percent = int((completed_days / total_days) * 100)
 
     current_date = datetime.now().date()
-    from datetime import date
-    start_date_str = "2025-05-12"
-    start_date = date.fromisoformat(start_date_str)
+    # Use the calculated start_date consistently (65 days before tomorrow)
+    # base_date and start_date were calculated above
     return render_template(
         "daily.html",
         completion=completion,

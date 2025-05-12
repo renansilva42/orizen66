@@ -98,6 +98,7 @@
                     {% endif %}
                 </button>
             </form>
+            </section>
             {% endif %}
 
             <section class="daily-timeline-section">
@@ -115,7 +116,7 @@
                     </div>
                 </div>
                 
-                <div class="timeline-grid">
+                <div class="timeline-grid" id="timeline-container">
                     {% for day in range(total_days) %}
                         {% set day_date = (start_date + timedelta(days=day)) %}
                         {% set day_iso = day_date.strftime('%Y-%m-%d') %}
@@ -126,7 +127,7 @@
                             {% endif %}
                         {% endfor %}
                         
-                        <div class="daily-card {% if day_completion and day_completion.completed %}completed{% else %}missing{% endif %} {% if selected_date and day_date == selected_date %}selected{% endif %}">
+                        <div class="daily-card {% if day_completion and day_completion.completed %}completed{% else %}missing{% endif %} {% if selected_date and day_date == selected_date %}selected{% endif %}" data-date="{{ day_iso }}">
                             <div class="card-status-indicator"></div>
                             <div class="day-header">
                                 <div class="day-number">Dia {{ day + 1 }}</div>
@@ -167,10 +168,61 @@
                     {% endfor %}
                 </div>
             </section>
-    </script>
+        </main>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Armazena os dados das conclusões para uso posterior
+            let completionsData = {};
+            
+            // Função para salvar os dados das conclusões no localStorage
+            function saveCompletionsToStorage() {
+                localStorage.setItem('dailyCompletions', JSON.stringify(completionsData));
+            }
+            
+            // Função para carregar os dados das conclusões do localStorage
+            function loadCompletionsFromStorage() {
+                const storedCompletions = localStorage.getItem('dailyCompletions');
+                if (storedCompletions) {
+                    completionsData = JSON.parse(storedCompletions);
+                }
+            }
+            
+            // Carregar dados do localStorage ao iniciar
+            loadCompletionsFromStorage();
+            
+            // Popula os dados iniciais dos cards que estão marcados como concluídos
+            document.querySelectorAll('.daily-card.completed').forEach(card => {
+                const date = card.dataset.date;
+                const photoPreview = card.querySelector('.photo-preview img');
+                const commentPreview = card.querySelector('.comment-preview');
+                
+                let photoUrl = null;
+                let comment = null;
+                
+                if (photoPreview) {
+                    photoUrl = photoPreview.src;
+                }
+                
+                if (commentPreview) {
+                    // Extrai o texto do comentário sem o ícone
+                    const commentText = commentPreview.textContent.trim();
+                    comment = commentText;
+                }
+                
+                // Salva os dados no objeto de completions
+                completionsData[date] = {
+                    completed: true,
+                    photo_url: photoUrl,
+                    comment: comment,
+                    date: date
+                };
+            });
+            
+            // Salva os dados iniciais no localStorage
+            saveCompletionsToStorage();
+            
             const dailyForm = document.getElementById('daily-form');
             if (dailyForm) {
                 dailyForm.addEventListener('submit', function(event) {
@@ -178,6 +230,10 @@
         
                     const formData = new FormData(dailyForm);
                     const actionUrl = dailyForm.getAttribute('action');
+                    
+                    // Extrair a data da URL do formulário
+                    const urlParams = new URLSearchParams(actionUrl.split('?')[1]);
+                    const currentDate = urlParams.get('date');
         
                     fetch(actionUrl, {
                         method: 'POST',
@@ -189,79 +245,83 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.completed) {
+                            // Salva os dados da conclusão no objeto de completions
+                            completionsData[data.date] = {
+                                completed: true,
+                                photo_url: data.photo_url || null,
+                                comment: data.comment || null,
+                                date: data.date
+                            };
+                            
+                            // Salva os dados no localStorage
+                            saveCompletionsToStorage();
+                            
                             // Update the card for the day dynamically
                             const dayDate = data.date; // Assume que data.date vem no formato 'YYYY-MM-DD'
                             const comment = data.comment || '';
                             const photoUrl = data.photo_url;
         
                             // Find the card with matching date
-                            const cards = document.querySelectorAll('.daily-card');
-                            cards.forEach(card => {
-                                const dayDateElem = card.querySelector('.day-date');
-                                if (!dayDateElem) return;
+                            const card = document.querySelector(`.daily-card[data-date="${dayDate}"]`);
+                            if (card) {
+                                // Update card classes
+                                card.classList.remove('missing');
+                                card.classList.add('completed');
         
-                                // Extrair a data do card no formato 'dd/mm/yyyy' e converter para comparação
-                                const cardDate = dayDateElem.textContent.trim(); // 'dd/mm/yyyy'
-                                const [day, month, year] = cardDate.split('/');
-                                const cardIsoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`; // 'YYYY-MM-DD'
-        
-                                if (cardIsoDate === dayDate) {
-                                    // Update card classes
-                                    card.classList.remove('missing');
-                                    card.classList.add('completed');
-        
-                                    // Update completion badge
-                                    let badge = card.querySelector('.completion-badge');
-                                    if (!badge) {
-                                        badge = document.createElement('div');
-                                        badge.classList.add('completion-badge');
-                                        badge.innerHTML = '<i class="fas fa-check-circle"></i>';
-                                        const dayHeader = card.querySelector('.day-header');
-                                        if (dayHeader) {
-                                            dayHeader.appendChild(badge);
-                                        }
-                                    }
-        
-                                    // Update completion summary
-                                    let summary = card.querySelector('.completion-summary');
-                                    if (!summary) {
-                                        summary = document.createElement('div');
-                                        summary.classList.add('completion-summary');
-                                        card.insertBefore(summary, card.querySelector('.btn-edit'));
-                                    }
-                                    summary.innerHTML = '';
-        
-                                    if (photoUrl) {
-                                        const photoDiv = document.createElement('div');
-                                        photoDiv.classList.add('photo-preview');
-                                        const img = document.createElement('img');
-                                        img.src = photoUrl;
-                                        img.alt = `Foto do dia ${card.querySelector('.day-number').textContent}`;
-                                        img.classList.add('daily-photo-thumb');
-                                        photoDiv.appendChild(img);
-                                        summary.appendChild(photoDiv);
-                                    }
-        
-                                    if (comment) {
-                                        const commentDiv = document.createElement('div');
-                                        commentDiv.classList.add('comment-preview');
-                                        commentDiv.innerHTML = `<i class="fas fa-quote-left"></i> ${comment.length > 50 ? comment.substring(0, 50) + '...' : comment}`;
-                                        summary.appendChild(commentDiv);
-                                    }
-        
-                                    // Remove "no completion" message if present
-                                    const noCompletion = card.querySelector('.completion-summary.no-completion');
-                                    if (noCompletion) {
-                                        noCompletion.remove();
-                                    }
-        
-                                    // Update the edit button text/icon
-                                    const btnEdit = card.querySelector('.btn-edit');
-                                    if (btnEdit) {
-                                        btnEdit.innerHTML = '<i class="fas fa-edit"></i> Editar';
+                                // Update completion badge
+                                let badge = card.querySelector('.completion-badge');
+                                if (!badge) {
+                                    badge = document.createElement('div');
+                                    badge.classList.add('completion-badge');
+                                    badge.innerHTML = '<i class="fas fa-check-circle"></i>';
+                                    const dayHeader = card.querySelector('.day-header');
+                                    if (dayHeader) {
+                                        dayHeader.appendChild(badge);
                                     }
                                 }
-                            });
+        
+                                // Update completion summary
+                                let summary = card.querySelector('.completion-summary');
+                                if (!summary) {
+                                    summary = document.createElement('div');
+                                    summary.classList.add('completion-summary');
+                                    card.insertBefore(summary, card.querySelector('.btn-edit'));
+                                } else {
+                                    // Limpa o conteúdo atual
+                                    summary.innerHTML = '';
+                                    summary.classList.remove('no-completion');
+                                }
+        
+                                if (photoUrl) {
+                                    const photoDiv = document.createElement('div');
+                                    photoDiv.classList.add('photo-preview');
+                                    const img = document.createElement('img');
+                                    img.src = photoUrl;
+                                    img.alt = `Foto do dia ${card.querySelector('.day-number').textContent}`;
+                                    img.classList.add('daily-photo-thumb');
+                                    photoDiv.appendChild(img);
+                                    summary.appendChild(photoDiv);
+                                }
+        
+                                if (comment) {
+                                    const commentDiv = document.createElement('div');
+                                    commentDiv.classList.add('comment-preview');
+                                    commentDiv.innerHTML = `<i class="fas fa-quote-left"></i> ${comment.length > 50 ? comment.substring(0, 50) + '...' : comment}`;
+                                    summary.appendChild(commentDiv);
+                                }
+        
+                                // Remove "no completion" message if present
+                                const noCompletion = card.querySelector('.completion-summary.no-completion');
+                                if (noCompletion) {
+                                    noCompletion.remove();
+                                }
+        
+                                // Update the edit button text/icon
+                                const btnEdit = card.querySelector('.btn-edit');
+                                if (btnEdit) {
+                                    btnEdit.innerHTML = '<i class="fas fa-edit"></i> Editar';
+                                }
+                            }
         
                             // Atualizar a seção de progresso
                             const progressStats = document.querySelector('.progress-stats');
@@ -352,7 +412,80 @@
                     }
                 });
             });
+            
+            // Função para aplicar os dados das conclusões aos cards
+            function applyCompletionsToCards() {
+                for (const date in completionsData) {
+                    const completion = completionsData[date];
+                    if (completion.completed) {
+                        const card = document.querySelector(`.daily-card[data-date="${date}"]`);
+                        if (card) {
+                            // Marca o card como concluído
+                            card.classList.remove('missing');
+                            card.classList.add('completed');
+                            
+                            // Adiciona o badge de conclusão se não existir
+                            let badge = card.querySelector('.completion-badge');
+                            if (!badge) {
+                                badge = document.createElement('div');
+                                badge.classList.add('completion-badge');
+                                badge.innerHTML = '<i class="fas fa-check-circle"></i>';
+                                const dayHeader = card.querySelector('.day-header');
+                                if (dayHeader) {
+                                    dayHeader.appendChild(badge);
+                                }
+                            }
+                            
+                            // Atualiza o resumo da conclusão
+                            let summary = card.querySelector('.completion-summary');
+                            if (!summary) {
+                                summary = document.createElement('div');
+                                summary.classList.add('completion-summary');
+                                card.insertBefore(summary, card.querySelector('.btn-edit'));
+                            } else {
+                                // Limpa o conteúdo atual
+                                summary.innerHTML = '';
+                                summary.classList.remove('no-completion');
+                            }
+                            
+                            if (completion.photo_url) {
+                                const photoDiv = document.createElement('div');
+                                photoDiv.classList.add('photo-preview');
+                                const img = document.createElement('img');
+                                img.src = completion.photo_url;
+                                img.alt = `Foto do dia ${card.querySelector('.day-number').textContent}`;
+                                img.classList.add('daily-photo-thumb');
+                                photoDiv.appendChild(img);
+                                summary.appendChild(photoDiv);
+                            }
+                            
+                            if (completion.comment) {
+                                const commentDiv = document.createElement('div');
+                                commentDiv.classList.add('comment-preview');
+                                commentDiv.innerHTML = `<i class="fas fa-quote-left"></i> ${completion.comment.length > 50 ? completion.comment.substring(0, 50) + '...' : completion.comment}`;
+                                summary.appendChild(commentDiv);
+                            }
+                            
+                            // Atualiza o botão de edição
+                            const btnEdit = card.querySelector('.btn-edit');
+                            if (btnEdit) {
+                                btnEdit.innerHTML = '<i class="fas fa-edit"></i> Editar';
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Aplica os dados de conclusão após o carregamento da página
+            applyCompletionsToCards();
+            
+            // Adiciona ouvintes para os botões de fechamento das mensagens flash
+            document.querySelectorAll('.close-flash').forEach(button => {
+                button.addEventListener('click', function() {
+                    this.closest('.flash-message').remove();
+                });
+            });
         });
-        </script>
+    </script>
 </body>
 </html>
