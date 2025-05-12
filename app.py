@@ -263,5 +263,25 @@ def ranking():
     return render_template("ranking.html", ranking=ranking, profile=profile)
 
 
+@app.route("/daily/remove", methods=["POST"])
+def daily_remove():
+    if not is_logged_in():
+        return jsonify({"success": False, "error": "Usuário não autenticado"}), 401
+    user = session["user"]
+    data = request.get_json()
+    if not data or "date" not in data:
+        return jsonify({"success": False, "error": "Data não fornecida"}), 400
+    date_to_remove = data["date"]
+    try:
+        # Delete the daily completion for the user and date
+        supabase.table("daily_completions")\
+            .delete()\
+            .eq("user_id", user["id"])\
+            .eq("date", date_to_remove)\
+            .execute()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)
