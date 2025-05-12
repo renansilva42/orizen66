@@ -9,49 +9,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='header.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <style>
-        /* Estilos corrigidos para os botões de visualização e filtro */
-        .view-option,
-        .filter-option {
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: #333333;
-        }
-        
-        .view-option:hover,
-        .filter-option:hover {
-            background-color: #e0e0e0;
-        }
-        
-        .view-option.active,
-        .filter-option.active {
-            background-color: #a5e6c0;
-            color: #2a8c57;
-            border-color: #3cb371;
-        }
-
-        /* Hover effect for file upload label */
-        .file-upload-label:hover {
-            background-color: #d4f0d6;
-            border-color: #2a8c57;
-            color: #2a8c57;
-            cursor: pointer;
-        }
-
-        /* Thumbnail preview for uploaded image */
-        .file-preview-img {
-            max-width: 80px;
-            max-height: 80px;
-            margin-top: 10px;
-            border-radius: 8px;
-            object-fit: cover;
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -107,41 +64,40 @@
                     {% endif %}
                     <span class="date-badge">{{ selected_date.strftime('%d/%m/%Y') }}</span>
                 </h2>
-                <form method="post" enctype="multipart/form-data" action="{{ url_for('daily') }}?date={{ selected_date.strftime('%Y-%m-%d') }}" class="daily-form">
-                    <div class="form-group">
-                        <label for="comment"><i class="fas fa-comment"></i> Adicione um comentário (opcional):</label>
-                        <textarea id="comment" name="comment" rows="4" placeholder="Como foi seu dia? Compartilhe seus pensamentos...">{% if completion %}{{ completion.comment }}{% endif %}</textarea>
+            <form method="post" enctype="multipart/form-data" action="{{ url_for('daily') }}?date={{ selected_date.strftime('%Y-%m-%d') }}" class="daily-form" id="daily-form">
+                <div class="form-group">
+                    <label for="comment"><i class="fas fa-comment"></i> Adicione um comentário (opcional):</label>
+                    <textarea id="comment" name="comment" rows="4" placeholder="Como foi seu dia? Compartilhe seus pensamentos...">{% if completion %}{{ completion.comment }}{% endif %}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="photo"><i class="fas fa-camera"></i> Envie uma foto (opcional):</label>
+                    <div class="file-upload">
+                        <input type="file" id="photo" name="photo" accept="image/*" class="file-input" />
+                        <label for="photo" class="file-upload-label" tabindex="0" role="button" aria-label="Escolha um arquivo ou arraste-o aqui">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Escolha um arquivo ou arraste-o aqui</span>
+                        </label>
+                        <div class="file-name"></div>
+                        <div class="file-preview"></div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="photo"><i class="fas fa-camera"></i> Envie uma foto (opcional):</label>
-                        <div class="file-upload">
-                            <input type="file" id="photo" name="photo" accept="image/*" class="file-input" />
-                            <label for="photo" class="file-upload-label" tabindex="0" role="button" aria-label="Escolha um arquivo ou arraste-o aqui">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <span>Escolha um arquivo ou arraste-o aqui</span>
-                            </label>
-                            <div class="file-name"></div>
-                            <div class="file-preview"></div>
+                    {% if completion and completion.photo_url %}
+                        <div class="current-photo">
+                            <p><i class="fas fa-image"></i> Foto atual:</p>
+                            <img src="{{ completion.photo_url }}" alt="Foto atual" class="daily-photo-thumb" />
                         </div>
-                        
-                        {% if completion and completion.photo_url %}
-                            <div class="current-photo">
-                                <p><i class="fas fa-image"></i> Foto atual:</p>
-                                <img src="{{ completion.photo_url }}" alt="Foto atual" class="daily-photo-thumb" />
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <button type="submit" class="btn-complete">
-                        {% if completion and completion.completed %}
-                            <i class="fas fa-save"></i> Atualizar Conclusão
-                        {% else %}
-                            <i class="fas fa-check-circle"></i> Marcar como Concluído
-                        {% endif %}
-                    </button>
-                </form>
-            </section>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn-complete">
+                    {% if completion and completion.completed %}
+                        <i class="fas fa-save"></i> Atualizar Conclusão
+                    {% else %}
+                        <i class="fas fa-check-circle"></i> Marcar como Concluído
+                    {% endif %}
+                </button>
+            </form>
             {% endif %}
 
             <section class="daily-timeline-section">
@@ -211,108 +167,192 @@
                     {% endfor %}
                 </div>
             </section>
-        </main>
+    </script>
 
-        {% include 'footer.html' %}
-    </div>
-    
     <script>
-        // Preview do upload de arquivo
         document.addEventListener('DOMContentLoaded', function() {
-            const fileInput = document.querySelector('.file-input');
-            const fileName = document.querySelector('.file-name');
-            const fileLabel = document.querySelector('.file-upload-label');
-            const fileUpload = document.querySelector('.file-upload');
-            
-            if (fileInput) {
-                fileInput.addEventListener('change', function() {
-                    if (this.files && this.files[0]) {
-                        fileName.textContent = this.files[0].name;
-                        fileLabel.classList.add('has-file');
-                        // Show image preview
-                        const previewContainer = document.querySelector('.file-preview');
-                        if (previewContainer) {
-                            previewContainer.innerHTML = '';
-                            const img = document.createElement('img');
-                            img.src = URL.createObjectURL(this.files[0]);
-                            img.alt = 'Pré-visualização da imagem';
-                            img.classList.add('file-preview-img');
-                            previewContainer.appendChild(img);
+            const dailyForm = document.getElementById('daily-form');
+            if (dailyForm) {
+                dailyForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+        
+                    const formData = new FormData(dailyForm);
+                    const actionUrl = dailyForm.getAttribute('action');
+        
+                    fetch(actionUrl, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
                         }
-                    } else {
-                        fileName.textContent = '';
-                        fileLabel.classList.remove('has-file');
-                        const previewContainer = document.querySelector('.file-preview');
-                        if (previewContainer) {
-                            previewContainer.innerHTML = '';
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.completed) {
+                            // Update the card for the day dynamically
+                            const dayDate = data.date; // Assume que data.date vem no formato 'YYYY-MM-DD'
+                            const comment = data.comment || '';
+                            const photoUrl = data.photo_url;
+        
+                            // Find the card with matching date
+                            const cards = document.querySelectorAll('.daily-card');
+                            cards.forEach(card => {
+                                const dayDateElem = card.querySelector('.day-date');
+                                if (!dayDateElem) return;
+        
+                                // Extrair a data do card no formato 'dd/mm/yyyy' e converter para comparação
+                                const cardDate = dayDateElem.textContent.trim(); // 'dd/mm/yyyy'
+                                const [day, month, year] = cardDate.split('/');
+                                const cardIsoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`; // 'YYYY-MM-DD'
+        
+                                if (cardIsoDate === dayDate) {
+                                    // Update card classes
+                                    card.classList.remove('missing');
+                                    card.classList.add('completed');
+        
+                                    // Update completion badge
+                                    let badge = card.querySelector('.completion-badge');
+                                    if (!badge) {
+                                        badge = document.createElement('div');
+                                        badge.classList.add('completion-badge');
+                                        badge.innerHTML = '<i class="fas fa-check-circle"></i>';
+                                        const dayHeader = card.querySelector('.day-header');
+                                        if (dayHeader) {
+                                            dayHeader.appendChild(badge);
+                                        }
+                                    }
+        
+                                    // Update completion summary
+                                    let summary = card.querySelector('.completion-summary');
+                                    if (!summary) {
+                                        summary = document.createElement('div');
+                                        summary.classList.add('completion-summary');
+                                        card.insertBefore(summary, card.querySelector('.btn-edit'));
+                                    }
+                                    summary.innerHTML = '';
+        
+                                    if (photoUrl) {
+                                        const photoDiv = document.createElement('div');
+                                        photoDiv.classList.add('photo-preview');
+                                        const img = document.createElement('img');
+                                        img.src = photoUrl;
+                                        img.alt = `Foto do dia ${card.querySelector('.day-number').textContent}`;
+                                        img.classList.add('daily-photo-thumb');
+                                        photoDiv.appendChild(img);
+                                        summary.appendChild(photoDiv);
+                                    }
+        
+                                    if (comment) {
+                                        const commentDiv = document.createElement('div');
+                                        commentDiv.classList.add('comment-preview');
+                                        commentDiv.innerHTML = `<i class="fas fa-quote-left"></i> ${comment.length > 50 ? comment.substring(0, 50) + '...' : comment}`;
+                                        summary.appendChild(commentDiv);
+                                    }
+        
+                                    // Remove "no completion" message if present
+                                    const noCompletion = card.querySelector('.completion-summary.no-completion');
+                                    if (noCompletion) {
+                                        noCompletion.remove();
+                                    }
+        
+                                    // Update the edit button text/icon
+                                    const btnEdit = card.querySelector('.btn-edit');
+                                    if (btnEdit) {
+                                        btnEdit.innerHTML = '<i class="fas fa-edit"></i> Editar';
+                                    }
+                                }
+                            });
+        
+                            // Atualizar a seção de progresso
+                            const progressStats = document.querySelector('.progress-stats');
+                            const progressNumber = document.querySelector('.progress-number');
+                            const progressFill = document.querySelector('.progress-fill');
+                            const progressPercentage = document.querySelector('.progress-percentage');
+        
+                            if (progressStats && progressNumber && progressFill && progressPercentage) {
+                                if (data.completed_days !== undefined && data.total_days !== undefined) {
+                                    progressNumber.textContent = data.completed_days;
+                                    progressStats.innerHTML = `<span class="progress-number">${data.completed_days}</span> / ${data.total_days} dias concluídos`;
+                                }
+                                if (data.progress_percent !== undefined) {
+                                    progressFill.style.width = `${data.progress_percent}%`;
+                                    progressPercentage.textContent = `${data.progress_percent}%`;
+                                }
+                            }
+        
+                            // Reaplicar o filtro ativo
+                            const activeFilter = document.querySelector('.filter-option.active');
+                            if (activeFilter) {
+                                activeFilter.click();
+                            }
+        
+                            // Show a success flash message
+                            const flashContainer = document.querySelector('.flash-container');
+                            if (flashContainer) {
+                                const flashMessage = document.createElement('div');
+                                flashMessage.classList.add('flash-message');
+                                flashMessage.innerHTML = '<i class="fas fa-check-circle"></i> Tarefa diária salva com sucesso! <button class="close-flash">×</button>';
+                                flashContainer.appendChild(flashMessage);
+        
+                                // Add close event
+                                flashMessage.querySelector('.close-flash').addEventListener('click', function() {
+                                    flashMessage.remove();
+                                });
+                            }
+                        } else {
+                            throw new Error('Resposta do servidor indica falha na conclusão');
                         }
-                    }
+                    })
+                    .catch(error => {
+                        console.error('Erro na requisição:', error);
+                        const flashContainer = document.querySelector('.flash-container');
+                        if (flashContainer) {
+                            const flashMessage = document.createElement('div');
+                            flashMessage.classList.add('flash-message');
+                            flashMessage.style.borderLeftColor = 'var(--danger)';
+                            flashMessage.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+                            flashMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Erro ao salvar a tarefa diária. Tente novamente. <button class="close-flash">×</button>';
+                            flashContainer.appendChild(flashMessage);
+        
+                            // Add close event
+                            flashMessage.querySelector('.close-flash').addEventListener('click', function() {
+                                flashMessage.remove();
+                            });
+                        }
+                    });
                 });
             }
-            
-            if (fileUpload) {
-                fileUpload.addEventListener('dragenter', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    fileUpload.classList.add('dragover');
-                });
-                fileUpload.addEventListener('dragover', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    fileUpload.classList.add('dragover');
-                });
-                fileUpload.addEventListener('dragleave', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    fileUpload.classList.remove('dragover');
-                });
-                fileUpload.addEventListener('drop', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    fileUpload.classList.remove('dragover');
-                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                        fileInput.files = e.dataTransfer.files;
-                        fileName.textContent = e.dataTransfer.files[0].name;
-                        fileLabel.classList.add('has-file');
-                        e.dataTransfer.clearData();
-                    }
-                });
-            }
-            
-            // Fechar mensagens flash
-            const closeButtons = document.querySelectorAll('.close-flash');
-            closeButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    this.closest('.flash-message').remove();
-                });
-            });
-            
-            // Opções de visualização e filtro da linha do tempo
+        
+            // Restore view and filter buttons functionality
             const viewOptions = document.querySelectorAll('.view-option');
             const filterOptions = document.querySelectorAll('.filter-option');
             const timelineGrid = document.querySelector('.timeline-grid');
-            
+        
             viewOptions.forEach(option => {
                 option.addEventListener('click', function() {
                     viewOptions.forEach(opt => opt.classList.remove('active'));
                     this.classList.add('active');
-                    
+        
                     const view = this.dataset.view;
-                    timelineGrid.className = 'timeline-' + view;
+                    if (timelineGrid) {
+                        timelineGrid.className = 'timeline-' + view;
+                    }
                 });
             });
-            
+        
             filterOptions.forEach(option => {
                 option.addEventListener('click', function() {
                     filterOptions.forEach(opt => opt.classList.remove('active'));
                     this.classList.add('active');
-                    
+        
                     const filter = this.dataset.filter;
-                    timelineGrid.classList.remove('filter-all', 'filter-completed', 'filter-missing');
-                    timelineGrid.classList.add('filter-' + filter);
+                    if (timelineGrid) {
+                        timelineGrid.classList.remove('filter-all', 'filter-completed', 'filter-missing');
+                        timelineGrid.classList.add('filter-' + filter);
+                    }
                 });
             });
         });
-    </script>
+        </script>
 </body>
 </html>

@@ -1,4 +1,45 @@
 /* Estilos específicos para a página de check-in diário */
+/* Estilos corrigidos para os botões de visualização e filtro */
+.view-option,
+.filter-option {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #333333;
+}
+
+.view-option:hover,
+.filter-option:hover {
+    background-color: #e0e0e0;
+}
+
+.view-option.active,
+.filter-option.active {
+    background-color: #a5e6c0;
+    color: #2a8c57;
+    border-color: #3cb371;
+}
+
+/* Hover effect for file upload label */
+.file-upload-label:hover {
+    background-color: #d4f0d6;
+    border-color: #2a8c57;
+    color: #2a8c57;
+    cursor: pointer;
+}
+
+/* Thumbnail preview for uploaded image */
+.file-preview-img {
+    max-width: 80px;
+    max-height: 80px;
+    margin-top: 10px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
 :root {
   --primary: #3cb371;
   --primary-light: #a5e6c0;

@@ -106,6 +106,8 @@ def profile():
 
 from datetime import timedelta
 
+from flask import jsonify
+
 @app.route("/daily", methods=["GET", "POST"])
 def daily():
     if not is_logged_in():
@@ -156,6 +158,15 @@ def daily():
         }
         # Upsert daily completion with unique constraint on user_id and date
         supabase.table("daily_completions").upsert(data, on_conflict="user_id,date").execute()
+
+        # If AJAX request, return JSON with updated completion data
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({
+                "date": selected_date.isoformat(),
+                "completed": True,
+                "comment": comment,
+                "photo_url": photo_url
+            })
 
     # Fetch all daily completions for the user, limit to last 66 days
     # Adjust start_date to be 65 days before tomorrow (12/05/2025)
