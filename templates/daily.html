@@ -213,6 +213,9 @@
     <script>
         // Pass user_id from backend to JS
         const currentUserId = "{{ user_id }}";
+
+        // Embed completions data from backend for frontend JS
+        window.initialCompletionsData = {{ completions | tojson }};
     </script>
 
     {% include 'footer.html' %}
