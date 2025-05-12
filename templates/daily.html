@@ -164,6 +164,8 @@
                     {% for day in range(total_days) %}
                         {% set day_date = (start_date + timedelta(days=day)) %}
                         {% set day_iso = day_date.strftime('%Y-%m-%d') %}
+                        {# Debug output for day and date #}
+                        <div>DEBUG: day={{ day }}, day_date={{ day_date }}, day_iso={{ day_iso }}</div>
                         {% set day_completion = None %}
                         {% for c in completions %}
                             {% if c.date == day_iso %}
@@ -180,143 +182,42 @@
                                     <div class="completion-badge"><i class="fas fa-check-circle"></i></div>
                                 {% endif %}
                             </div>
-                            
-                            {% if day_completion and day_completion.completed %}
-                                <div class="completion-summary">
-                                    {% if day_completion.photo_url %}
-                                        <div class="photo-preview">
-                                            <img src="{{ day_completion.photo_url }}" alt="Foto do dia {{ day + 1 }}" class="daily-photo-thumb" />
-                                        </div>
-                                    {% endif %}
-                                    {% if day_completion.comment %}
-                                        <div class="comment-preview">
-                                            <i class="fas fa-quote-left"></i>
-                                            {{ day_completion.comment[:50] }}{% if day_completion.comment|length > 50 %}...{% endif %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            {% else %}
-                                <div class="completion-summary no-completion">
-                                    <i class="fas fa-times-circle"></i> Não concluído
-                                </div>
-                            {% endif %}
-                            
-                            <a href="{{ url_for('daily') }}?date={{ day_iso }}" class="btn-edit">
-                                {% if day_completion and day_completion.completed %}
-                                    <i class="fas fa-edit"></i> Editar
-                                {% else %}
-                                    <i class="fas fa-plus"></i> Concluir
+                        
+                        {% if day_completion and day_completion.completed %}
+                            <div class="completion-summary">
+                                {% if day_completion.photo_url %}
+                                    <div class="photo-preview">
+                                        <img src="{{ day_completion.photo_url }}" alt="Foto do dia {{ day + 1 }}" class="daily-photo-thumb" />
+                                    </div>
                                 {% endif %}
-                            </a>
-                        </div>
+                                {% if day_completion.comment %}
+                                    <div class="comment-preview">
+                                        <i class="fas fa-quote-left"></i>
+                                        {{ day_completion.comment[:50] }}{% if day_completion.comment|length > 50 %}...{% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="completion-summary no-completion">
+                                <i class="fas fa-times-circle"></i> Não concluído
+                            </div>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('daily') }}?date={{ day_iso }}" class="btn-edit">
+                            {% if day_completion and day_completion.completed %}
+                                <i class="fas fa-edit"></i> Editar
+                            {% else %}
+                                <i class="fas fa-plus"></i> Concluir
+                            {% endif %}
+                        </a>
+                    </div>
                     {% endfor %}
                 </div>
             </section>
         </main>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Armazena os dados das conclusões para uso posterior
-            let completionsData = {};
-            
-            // Função para salvar os dados das conclusões no localStorage
-            function saveCompletionsToStorage() {
-                localStorage.setItem('dailyCompletions', JSON.stringify(completionsData));
-            }
-            
-            // Função para carregar os dados das conclusões do localStorage
-            function loadCompletionsFromStorage() {
-                const storedCompletions = localStorage.getItem('dailyCompletions');
-                if (storedCompletions) {
-                    completionsData = JSON.parse(storedCompletions);
-                }
-            }
-            
-            // Carregar dados do localStorage ao iniciar
-            loadCompletionsFromStorage();
-            
-            // Popula os dados iniciais dos cards que estão marcados como concluídos
-            document.querySelectorAll('.daily-card.completed').forEach(card => {
-                const date = card.dataset.date;
-                const photoPreview = card.querySelector('.photo-preview img');
-                const commentPreview = card.querySelector('.comment-preview');
-                
-                let photoUrl = null;
-                let comment = null;
-                
-                if (photoPreview) {
-                    photoUrl = photoPreview.src;
-                }
-                
-                if (commentPreview) {
-                    // Extrai o texto do comentário sem o ícone
-                    const commentText = commentPreview.textContent.trim();
-                    comment = commentText;
-                }
-                
-                // Salva os dados no objeto de completions
-                completionsData[date] = {
-                    completed: true,
-                    photo_url: photoUrl,
-                    comment: comment,
-                    date: date
-                };
-            });
-            
-            // Salva os dados iniciais no localStorage
-            saveCompletionsToStorage();
-            
-            // Função para atualizar o progresso na UI
-            function updateProgressUI(completedDays, totalDays) {
-                const progressPercent = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
-                
-                const progressStats = document.querySelector('.progress-stats');
-                const progressNumber = document.querySelector('.progress-number');
-                const progressFill = document.querySelector('.progress-fill');
-                const progressPercentage = document.querySelector('.progress-percentage');
-                
-                if (progressStats && progressNumber && progressFill && progressPercentage) {
-                    progressNumber.textContent = completedDays;
-                    progressStats.innerHTML = `<span class="progress-number">${completedDays}</span> / ${totalDays} dias concluídos`;
-                    progressFill.style.width = `${progressPercent}%`;
-                    progressPercentage.textContent = `${progressPercent}%`;
-                }
-            }
-            
-            // Função para mostrar mensagem flash
-            function showFlashMessage(message, isError = false) {
-                const flashContainer = document.querySelector('.flash-container');
-                if (!flashContainer) {
-                    const newFlashContainer = document.createElement('div');
-                    newFlashContainer.classList.add('flash-container');
-                    document.querySelector('.progress-section').insertAdjacentElement('beforebegin', newFlashContainer);
-                    
-                    const flashMessage = document.createElement('div');
-                    flashMessage.classList.add('flash-message');
-                    
-                    if (isError) {
-                        flashMessage.style.borderLeftColor = 'var(--danger)';
-                        flashMessage.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
-                        flashMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message} <button class="close-flash">×</button>`;
-                    } else {
-                        flashMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${message} <button class="close-flash">×</button>`;
-                    }
-                    
-                    newFlashContainer.appendChild(flashMessage);
-                    
-                    // Add close event
-                    flashMessage.querySelector('.close-flash').addEventListener('click', function() {
-                        flashMessage.remove();
-                    });
-                } else {
-                    const flashMessage = document.createElement('div');
-                    flashMessage.classList.add('flash-message');
-                    
-                    if (isError) {
-                        flashMessage.style.borderLeftColor = 'var(--danger)';
-                        flashMessage.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
-                        flashMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message} <button class="close-flash">×</button>`;
+    <script src="{{ url_for('static', filename='daily.js') }}"></script>
                     } else {
                         flashMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${message} <button class="close-flash">×</button>`;
                     }

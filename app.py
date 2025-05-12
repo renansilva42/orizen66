@@ -129,9 +129,12 @@ def daily():
     else:
         selected_date = None
 
-    # Adjust start_date to be 65 days before tomorrow (12/05/2025)
-    base_date = datetime.now().date() + timedelta(days=1)
-    start_date = base_date - timedelta(days=65)
+    # Adjust start_date to be today (12/05/2025)
+    base_date = datetime.now().date()
+    start_date = base_date
+
+    # Debug logging for date values
+    print(f"[DEBUG] base_date: {base_date}, start_date: {start_date}, selected_date: {selected_date}")
 
     if request.method == "POST":
         if selected_date is None:
@@ -191,10 +194,9 @@ def daily():
                 "progress_percent": progress_percent
             })
 
-    # Fetch all daily completions for the user, limit to last 66 days
-    # Adjust start_date to be 65 days before tomorrow (12/05/2025)
-    base_date = datetime.now().date() + timedelta(days=1)
-    start_date = base_date - timedelta(days=65)
+    # Fetch all daily completions for the user, limit to next 66 days
+    base_date = datetime.now().date()
+    start_date = base_date
     response_all = supabase.table("daily_completions")\
         .select("*")\
         .eq("user_id", user["id"])\
@@ -219,8 +221,7 @@ def daily():
     progress_percent = int((completed_days / total_days) * 100)
 
     current_date = datetime.now().date()
-    # Use the calculated start_date consistently (65 days before tomorrow)
-    # base_date and start_date were calculated above
+    # Use the calculated start_date consistently (today)
     return render_template(
         "daily.html",
         completion=completion,
