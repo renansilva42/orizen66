@@ -271,10 +271,10 @@ def ranking():
     # Sort ranking by completions descending
     ranking_sorted = sorted(ranking, key=lambda x: x["completions"], reverse=True)
 
-    # Limit to top 10
-    ranking_top_10 = ranking_sorted[:10]
+    # No limit, show all users
+    ranking_all = ranking_sorted
 
-    return render_template("ranking.html", ranking=ranking_top_10, profile=profile)
+    return render_template("ranking.html", ranking=ranking_all, profile=profile)
 
 
 @app.route("/daily/remove", methods=["POST"])
