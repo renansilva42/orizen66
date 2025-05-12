@@ -1,0 +1,92 @@
+/* Base styles for login page */
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f8fafa;
+  color: #333;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  margin: 0;
+}
+
+.container {
+  background-color: #fff;
+  padding: 40px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.logo h1 {
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  color: #3cb371;
+}
+
+.logo .accent {
+  color: #ff6b6b;
+}
+
+h1 {
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  text-align: left;
+  color: #333;
+}
+
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+  outline: none;
+  border-color: #3cb371;
+  box-shadow: 0 0 0 3px rgba(60, 179, 113, 0.2);
+}
+
+button {
+  width: 100%;
+  background-color: #3cb371;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #2e8b57;
+}
+
+.flashes {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 20px;
+  color: #f44336;
+  font-weight: 600;
+  text-align: left;
+}

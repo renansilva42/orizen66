@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <title>Login - Orizen66</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}" />
-</head>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Login - Orizen66</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}" />
+    </head>
 <body>
     <div class="container">
+
+        <div class="logo">
+            <h1>Orizen<span class="accent">66</span></h1>
+        </div>
 
         <h1>Login</h1>
         {% with messages = get_flashed_messages() %}
