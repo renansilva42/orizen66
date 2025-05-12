@@ -84,6 +84,7 @@ def profile():
     if response.data and len(response.data) > 0:
         profile = response.data[0]
     if request.method == "POST":
+        name = request.form.get("name")
         activity = request.form.get("activity")
         photo = request.files.get("photo")
         photo_url = None
@@ -92,6 +93,7 @@ def profile():
         # Salve ou atualize o perfil do usuário no Supabase
         data = {
             "user_id": user["id"],
+            "name": name,
             "activity": activity,
             "photo_url": photo_url,
         }
@@ -263,6 +265,7 @@ def ranking():
         completions_count = response_count.count if response_count.count is not None else 0
         ranking.append({
             "user_id": user_id,
+            "name": profile_item.get("name"),
             "activity": profile_item.get("activity"),
             "photo_url": profile_item.get("photo_url"),
             "completions": completions_count

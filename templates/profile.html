@@ -135,6 +135,15 @@
 
                 <form method="post" enctype="multipart/form-data" action="{{ url_for('profile') }}" class="profile-form" novalidate>
                     <div class="form-group">
+                        <label for="name">Nome do Usuário</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-user" aria-hidden="true"></i>
+                            <input type="text" id="name" name="name" value="{{ profile.name or '' }}" placeholder="Digite seu nome" required aria-required="true" aria-describedby="name-help" />
+                        </div>
+                        <p class="help-text" id="name-help">Este nome será exibido no ranking.</p>
+                    </div>
+
+                    <div class="form-group">
                         <label for="activity">Qual hábito saudável você deseja cultivar?</label>
                         <div class="input-with-icon">
                             <i class="fas fa-heart" aria-hidden="true"></i>

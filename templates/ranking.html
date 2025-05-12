@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ranking- Orizen66</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='daily.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='header.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='ranking.css') }}" />
@@ -21,6 +20,7 @@
             <thead>
                 <tr>
                     <th>Classificação</th>
+                    <th>Nome do Usuário</th>
                     <th>Foto de perfil</th>
                     <th>Atividades</th>
                     <th>Dias Completados</th>
@@ -30,6 +30,7 @@
                 {% for user in ranking %}
                 <tr>
                     <td>{{ loop.index }}</td>
+                    <td>{{ user.name or 'N/A' }}</td>
                     <td>
                         {% if user.photo_url %}
                             <img src="{{ user.photo_url }}" alt="Profile Photo" width="50" />
@@ -42,7 +43,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="4">No data available.</td>
+                    <td colspan="5">No data available.</td>
                 </tr>
                 {% endfor %}
             </tbody>
