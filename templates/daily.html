@@ -210,6 +210,11 @@
         </main>
     </div>
 
+    <script>
+        // Pass user_id from backend to JS
+        const currentUserId = "{{ user_id }}";
+    </script>
+
     {% include 'footer.html' %}
     <script src="{{ url_for('static', filename='daily.js') }}"></script>
 </body>

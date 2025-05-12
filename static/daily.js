@@ -4,12 +4,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Função para salvar os dados das conclusões no localStorage
     function saveCompletionsToStorage() {
-        localStorage.setItem('dailyCompletions', JSON.stringify(completionsData));
+        localStorage.setItem(`dailyCompletions_${currentUserId}`, JSON.stringify(completionsData));
     }
     
     // Função para carregar os dados das conclusões do localStorage
     function loadCompletionsFromStorage() {
-        const storedCompletions = localStorage.getItem('dailyCompletions');
+        const storedCompletions = localStorage.getItem(`dailyCompletions_${currentUserId}`);
         if (storedCompletions) {
             completionsData = JSON.parse(storedCompletions);
         }

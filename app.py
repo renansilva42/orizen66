@@ -235,7 +235,8 @@ def daily():
         progress_percent=progress_percent,
         timedelta=timedelta,
         current_date=current_date,
-        start_date=start_date
+        start_date=start_date,
+        user_id=user["id"]
     )
 
 @app.route("/ranking")
