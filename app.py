@@ -131,8 +131,9 @@ def daily():
     else:
         selected_date = None
 
-    # Adjust start_date to be today (12/05/2025)
-    base_date = datetime.now().date()
+    # Adjust start_date to be fixed date 12/05/2025
+    import datetime as dt
+    base_date = dt.date(2025, 5, 12)
     start_date = base_date
 
     # Debug logging for date values
