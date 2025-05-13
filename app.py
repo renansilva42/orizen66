@@ -198,7 +198,8 @@ def daily():
             })
 
     # Fetch all daily completions for the user, limit to next 66 days
-    base_date = datetime.now().date()
+    import datetime as dt
+    base_date = dt.date(2025, 5, 12)
     start_date = base_date
     response_all = supabase.table("daily_completions")\
         .select("*")\
